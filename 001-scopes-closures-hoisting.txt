@@ -1,0 +1,236 @@
+// YDKJS - Scopes and Closures
+	
+	// Scopes - rules about how we can push in or pull out values to or from variables
+		// JS has lexical scope - the scopes are mostly static and fixed down in author time
+
+		var a; a = 'hello';						// Left Hand Side look-up, giving value to the variable
+		console.log(a);							// Right Hand Side look-up, looking up the value of a variable
+
+		console.log(b);							// ReferenceError, as `b` not found by the engine in this scope 
+												// or any enclosing scopes.
+
+		console.log(c); var c = "it's fine";	// undefined (!), because of the `var c;` part is hoisted.
+												// but the `c = "it's fine";` part is not moved.
+
+		c();									// TypeError - as `c` is not a function
+
+		d = '42'; console.log(d);				// polluting global scope
+		console.log(window.d);					// global scope variables get added to the `window` object
+
+		'use strict'; e = "42";					// ReferenceError, ES5 feature, the `'use strict';` prevents the engine
+												// to create the variable on the global scope.
+
+	// Function scopes
+		// Function scopes can be conceptualized, as bubbles containing each other in the global scope.
+		// Lexical scope (so what the function reaches) is only dictated by where the function is implemented.
+
+												// global scope: foo, f
+		function foo(g) {						// foo's scope: g, bar, but reaches into global scope
+			f = g * 3;
+			function bar ()	{					// bar's scope: h, but it reaches into foo's and global scope
+				var h = 42;
+				console.log(g, f, h);
+			}
+			bar();
+			// console.log(g, f, h);
+		}
+		var f;
+		foo(12);
+
+		// Variable look up stops at the first match.
+		// The method of overriding variables in a nested scope from an enclosing scope is called 'shadowing'
+		var j = 'global'; function goo() { var j = 'nested'; console.log(j, 'scope');} goo();
+
+		// Everything, which is available in the enclosing scope, is available in the nested scope, including
+		// the function itself. This why recursion can work in Js as well.
+		var a = 0; function foo() { if (a <10) { a++; console.log(a); foo();}} foo();
+
+		// Cheating lexical scope
+		// Insert run time expressions and modify scopes with `eval()`, `setTimeout()`,
+		// `setInterval()` and `new Function(lastParam);`. All of these can recive a 
+		// dynamic created string and executes it as Js code. 
+
+		var k = 'Output this!';
+		function barfoo() { return 'var k = "Dynamically created output";'; };
+		function fbaar() { eval(barfoo()); console.log(k);}
+		fbaar();
+
+	// Function vs. Block Scope
+
+		// To declare a function in a scope, we must assign a name to it:
+		function() { console.log('anon function');} // SyntaxError: function statement requires a name
+
+		// Function expressions, though does not require obligatory names:
+		(function() {return;})
+		var funcExpr = function () {return null; }
+		// If the function decleration is wrapped into parenthesis - it is a function expression
+		// It does not require a name, but you can still name it:
+		(function fooExr() {return;})
+
+		// Immediately Invoked Function Expression
+			// Create a function expression and invoke it immediately, without polluting the global scope.
+			// variations (Of course, each can be a named function):
+
+			(function() { // some code })();
+			(function() { //some code }());
+			(function(def) { def(window); }(function (global) { console.log('Global's type: ', typeof(global));}))
+
+			// In strict mode, IIFE can add variables to global scope like this (think of any Js framework!):
+			(function(global) {global.a = 'IIFE added me!';}(window)); console.log(a);
+
+		// Block scoping
+		// `let` and `const` in ES6 allow you to create block level value containers.
+		// `let` variable can change values after declaration. `const`'s value is static.
+		{let blockLevel = 'block level variable'; console.log(blockLevel); } console.log(blockLevel);
+
+		// Block scoping since '99! - ES3
+		var errMsg = 'OuterScope';
+		try {
+			throw('This is block scoped, since ES3!');
+		}
+		catch(errMsg) {
+			console.log(errMsg);
+		}
+		console.log(errMsg);
+		// ES6 block level constellations will be polyfilled to this behavior.
+
+		// `undefined` can be overwritten in IE11 - IIFE syntax can sanitize this.
+
+	// Hoisting
+
+		var a = 2; 	// Compiler breaks this up to `var a;` and `a = 2;`.
+					// `var a;` is hoisted up to the beginning of its containing scope, and thus the
+					// variable will be usable in that scope (meaning, compiler does not throw ReferenceError).
+
+		// Hoisting is per-scope. The declarations only hoist to their containing scope.
+
+		// function declarations hoist:
+		hoistFooDeclr();
+		function hoistFooDeclr() { console.log('I\'m hoisted MF!');}
+
+		// but function exressions not:
+		hoistFuncExpr();
+		var hoistFuncExpr = function() { console.log('Please hoist me!'); } // TypeError
+
+		// Function declarations hoist first, then variable declarations.
+		weirdHoistExample();
+
+		var weirdHoistExample;
+		function weirdHoistExample() {
+			return 'hello from function declaration';
+		}
+		var weirdHoistExample = function () { return 'I\'m ain\'t a function declaration!'; }
+
+	// Closures
+
+		// Closure is when a function is able to remember and access its lexical scope
+		// even when that function is executing outside its lexical scope.
+
+		function foo() {
+			var a = "from foo's scope";
+			function bar()  {
+				console.log(a);
+			}
+			return bar;						// return with the function
+		}
+		var baz = foo();					// foo executed
+		baz(); 								// foo scope is kept alive by bar() reference
+
+		// If we transfer a function in a variable / argument passing it will hold a closure over it's own lexical scope.
+
+		// Lets write 1..5 numbers with some time spacing between them
+		for (var i=1; i<=5; i++) {
+		    setTimeout( function timer(){
+		        console.log( i );
+		    }, i*1000 ); 
+		} // 5 times '6' --> closure over global i, which has changed at the end to 6
+
+		// Fix this -->
+		for(var i = 0; i <=5; i++) {
+			(function(j) {
+				setTimeout( function() {
+					console.log(j);
+							},j*1000); 
+				}
+			(i))
+		}
+		// closure was hold over the IIFE, which gets the `i` 5 times, with different values --> 5 scopes creted
+		// In ES6 we can use `let` for this, as `let` in `for` loop is recreated for each iteration
+
+	// Module pattern
+
+		// "Principle of Least Privilige" 
+		// Only expose minimal interface between modules, so the modules can be independent of each other.
+		
+		// Enclose private implementation details into scopes -  also avoid name collisions (multiple frameworks).
+		// Libraries usually create global 'namespaces' properties on the global scope ($, jQuery).
+
+		var Calculator = function () {
+			var publicAPI = {};
+
+			function addTwoNumbers(left, right) {
+				return left + right;
+			}
+
+			publicAPI.add = addTwoNumbers;
+
+			return publicAPI;
+			// Or return { x: y, z: w}; <-- Object literal syntax.
+		}
+
+		var calc = Calculator();
+		console.log(calc.add(2,3));
+
+		// Module manager dummy implementation:
+
+		/* Module manager implemented */
+
+		var MyModules = (function ModuleManager() {
+			var modules = {};
+
+			function set(name, deps, impl) {
+				for (var i = 0; i < deps.length; i++) {
+					deps[i] = modules[deps[i]]; // string dependency names to dependency modules resolution
+				}
+				modules[name] = impl.apply(impl, deps); // invoke impl, with set `this` and the dependencies
+			}
+
+			function get(name) {
+				return modules[name];
+			}
+
+			return {
+				get: get,
+				set: set
+			}
+		})();
+
+		MyModules.set('foo', [], function foo() {
+			var foo = new Object;
+
+			var helloString = 'Hello from the Foo side of the life';
+			foo.hello = function hello(toWho) {
+				return helloString + ' ' + toWho + ' ' + '!';
+			}
+
+			return foo;
+		});
+
+		MyModules.set('bar', ['foo'], function bar(foo) {
+
+			console.log(foo);
+			var bar = new Object;
+
+			var fooHello = foo.hello('Bar-bie');
+			bar.hello = function hello() {
+				return fooHello.toUpperCase();
+			}
+
+			return bar;
+		});
+
+		var foo = MyModules.get('foo');
+		var bar = MyModules.get('bar');
+		console.log(foo.hello('hippo'));
+		console.log(bar.hello());
+

@@ -1,0 +1,82 @@
+<html>
+    <head>
+        <style>
+            .flex-container {
+                min-height: 400px;
+                border: 1px solid #000;
+
+                display: flex;
+                /* Vertical alignment of the flex-items: */
+                /* flex-direction: column; */
+                /* flex-direction: column-reverse; */
+
+                /* Horizontal alignment of the flex items: */
+                flex-direction: row;
+                /* flex-direction: rows-reverse; */
+
+                /* Mutli line wrapping / nowrap */
+                flex-wrap: wrap;
+                /* flex-wrap: nowarp */
+                /* flex-wrap: wrap-reverse */
+
+                /*flex-flow: (flex-direction) (flex-wrap); <-- shorthand */
+
+                /* justify-content: space-between; flex-start, flex-end, center */
+                justify-content: space-around;
+
+                /* align items vertically / horizontally on cross axis __within a line__ */
+                /* align-items: stretch;  <-- fill full available space*/
+                align-items: flex-start; /* baseline, center, felx-start, flex-end */
+                
+                /* aligns the lines within the container */
+                align-content: space-around;
+
+                /* align-content: space-between, space-around; <-- spacing for the lines*/
+            }
+
+            .flex-item {
+                width: 120px;
+                border:1px solid red;
+            }
+
+            .first {
+                /* order: 1; default: 0. If you need to add order, you need to add it to all. */
+                height: 200px;
+                flex-grow: 2;
+            }
+
+            .second {
+                height: 150px;
+                /* How much the flex item will grow, relatively compared to the others,
+                 when positive free space is distributed. */
+                flex-grow: 1;
+            }
+
+            .third {
+                height: 110px;
+                /* If negative free space is distibuted, then this flex item will shrink. */
+                flex-shrink: 2;
+                
+                /* Same as width, if flex-direction = row;, and height, if flex-direction = column; */
+                flex-basis: 100px;
+
+                /* shorthand: flex: <flex-grow>, <flex-shrink> <flex-basis>;
+                i.e.: flex: 1 1 100px */
+
+                /* overriders align-items */
+                align-self: flex-end;
+            }
+
+        </style>
+    </head>
+    <body>
+        <div class='flex-container'>
+            <div class='flex-item first'>A</div>
+            <div class='flex-item second'>B</div>
+            <div class='flex-item third'>C</div>
+            <div class='flex-item'>D</div>
+            <div class='flex-item'>E</div>
+            <div class='flex-item'>F</div>
+        </div>
+    </body>
+</html>
